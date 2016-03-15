@@ -42,7 +42,7 @@ SHELL = @MAKE_SHELL@
 
 PERL5 = perl5
 
-CFLAGS = @CFLAGS@
+CFLAGS = -O2 -g
 
 #
 # These values are generated for configure by ${topdir}/support/shobj-conf.
