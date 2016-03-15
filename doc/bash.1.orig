@@ -9867,7 +9867,7 @@ The latest version is always available from
 .PP
 Once you have determined that a bug actually exists, use the
 .I bashbug
-command (from the source package) to submit a bug report.
+command to submit a bug report.
 If you have a fix, you are encouraged to mail that as well!
 Suggestions and `philosophical' bug reports may be mailed
 to \fIbug-bash@gnu.org\fP or posted to the Usenet
@@ -9888,6 +9888,10 @@ A description of the bug behaviour
 .TP
 A short script or `recipe' which exercises the bug
 .PD
+.PP
+.I bashbug
+inserts the first three items automatically into the template
+it provides for filing a bug report.
 .PP
 Comments and bug reports concerning
 this manual page should be directed to
