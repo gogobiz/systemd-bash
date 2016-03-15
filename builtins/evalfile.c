@@ -133,11 +133,13 @@ file_error_and_exit:
   if (S_ISDIR (finfo.st_mode))
     {
       (*errfunc) (_("%s: is a directory"), filename);
+      close(fd);
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
     }
   else if ((flags & FEVAL_REGFILE) && S_ISREG (finfo.st_mode) == 0)
     {
       (*errfunc) (_("%s: not a regular file"), filename);
+      close(fd);
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
     }
 
@@ -146,6 +148,7 @@ file_error_and_exit:
   if (file_size != finfo.st_size || file_size + 1 < file_size)
     {
       (*errfunc) (_("%s: file is too large"), filename);
+      close(fd);
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
     }      
 
