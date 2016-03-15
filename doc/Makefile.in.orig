@@ -70,6 +70,7 @@ TEXI2DVI    = ${SUPPORT_SRCDIR}/texi2dvi
 TEXI2HTML   = ${SUPPORT_SRCDIR}/texi2html
 MAN2HTML    = ${BUILD_DIR}/support/man2html
 HTMLPOST    = ${srcdir}/htmlpost.sh
+INFOPOST    = ${srcdir}/infopost.sh
 QUIETPS	    = #set this to -q to shut up dvips
 PAPERSIZE   = letter	# change to a4 for A4-size paper
 PSDPI       = 600	# could be 300 if you like
@@ -147,7 +148,7 @@ everything: all pdf
 
 PSFILES = bash.ps bashbug.ps article.ps builtins.ps rbash.ps 
 DVIFILES = bashref.dvi bashref.ps
-INFOFILES = bashref.info bash.info
+INFOFILES = bashref.info
 MAN0FILES = bash.0 bashbug.0 builtins.0 rbash.0
 HTMLFILES = bashref.html bash.html
 PDFFILES = bash.pdf bashref.pdf article.pdf rose94.pdf
@@ -168,8 +169,8 @@ bashref.info: $(BASHREF_FILES) $(HSUSER) $(RLUSER)
 bashref.html: $(BASHREF_FILES) $(HSUSER) $(RLUSER)
 	$(TEXI2HTML) -menu -monolithic -I $(TEXINPUTDIR) $(srcdir)/bashref.texi
 
-bash.info: $(BASHREF_FILES) $(HSUSER) $(RLUSER)
-	$(MAKEINFO) --no-split -I$(TEXINPUTDIR) $(srcdir)/bashref.texi -o $@
+bash.info: bashref.info
+	${SHELL} ${INFOPOST} < $(srcdir)/bashref.info > $@ ; \
 
 bash.txt: bash.1
 bash.ps: bash.1
