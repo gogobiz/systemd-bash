@@ -1373,12 +1373,19 @@ start_debugger ()
 {
 #if defined (DEBUGGER) && defined (DEBUGGER_START_FILE)
   int old_errexit;
+  int r;
 
   old_errexit = exit_immediately_on_error;
   exit_immediately_on_error = 0;
 
-  maybe_execute_file (DEBUGGER_START_FILE, 1);
-  function_trace_mode = 1;
+  r = force_execute_file (DEBUGGER_START_FILE, 1);
+  if (r < 0)
+    {
+      internal_warning ("cannot start debugger; debugging mode disabled");
+      debugging_mode = function_trace_mode = 0;
+    }
+  else
+    function_trace_mode = 1;
 
   exit_immediately_on_error += old_errexit;
 #endif

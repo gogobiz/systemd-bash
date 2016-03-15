@@ -125,7 +125,7 @@ file_error_and_exit:
 	}
 
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE
-      				      : ((errno == ENOENT) ? 0 : -1));
+      				      : ((errno == ENOENT && (flags & FEVAL_ENOENTOK) != 0) ? 0 : -1));
     }
 
   errfunc = ((flags & FEVAL_BUILTIN) ? builtin_error : internal_error);
@@ -310,6 +310,23 @@ maybe_execute_file (fname, force_noninteractive)
 
   filename = bash_tilde_expand (fname, 0);
   flags = FEVAL_ENOENTOK;
+  if (force_noninteractive)
+    flags |= FEVAL_NONINT;
+  result = _evalfile (filename, flags);
+  free (filename);
+  return result;
+}
+
+int
+force_execute_file (fname, force_noninteractive)
+     const char *fname;
+     int force_noninteractive;
+{
+  char *filename;
+  int result, flags;
+
+  filename = bash_tilde_expand (fname, 0);
+  flags = 0;
   if (force_noninteractive)
     flags |= FEVAL_NONINT;
   result = _evalfile (filename, flags);
