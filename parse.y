@@ -3858,6 +3858,8 @@ xparse_dolparen (base, string, indp, flags)
     sflags |= SEVAL_NOLONGJMP;
   save_parser_state (&ps);
   save_input_line_state (&ls);
+  /* avoid echoing every substitution again */
+  echo_input_at_read = 0;
 
   /*(*/
   parser_state |= PST_CMDSUBST|PST_EOFTOKEN;	/* allow instant ')' */ /*(*/
