@@ -366,7 +366,7 @@ initialize_shell_variables (env, privmode)
 	  /* Don't import function names that are invalid identifiers from the
 	     environment, though we still allow them to be defined as shell
 	     variables. */
-	  if (legal_identifier (temp_name))
+	  if (absolute_program (temp_name) == 0 && (posixly_correct == 0 || legal_identifier (temp_name)))
 	    parse_and_execute (temp_string, temp_name,
 			       SEVAL_NONINT|SEVAL_NOHIST|SEVAL_FUNCDEF|SEVAL_ONECMD);
 
