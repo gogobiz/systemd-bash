@@ -113,6 +113,7 @@ RL_LIBSRC = $(topdir)/lib/readline
 	$(RM) $@
 	./$(MKBUILTINS) $(DIRECTDEFINE) $<
 	$(CC) -c $(CCFLAGS) $*.c || ( $(RM) $*.c ; exit 1 )
+	$(RM) $*.c
 
 # How to make a .c file from a .def file.
 .def.c:
