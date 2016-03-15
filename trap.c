@@ -276,6 +276,9 @@ run_pending_traps ()
   if (catch_flag == 0)		/* simple optimization */
     return;
 
+  if (running_trap > 0)
+    return;			/* no recursive trap invocations */
+
   catch_flag = 0;
 
   /* Preserve $? when running trap. */
@@ -303,6 +306,8 @@ run_pending_traps ()
 	  int oldmask = sigblock (sigmask (sig));
 #  endif
 #endif /* HAVE_POSIX_SIGNALS */
+
+	  running_trap = sig + 1;
 
 	  if (sig == SIGINT)
 	    {
@@ -348,7 +353,14 @@ run_pending_traps ()
 	      save_subst_varlist = subst_assign_varlist;
 	      subst_assign_varlist = 0;
 
+#if defined (JOB_CONTROL)
+	      save_pipeline (1);        /* XXX only provides one save level */
+#endif
 	      parse_and_execute (savestring (trap_list[sig]), "trap", SEVAL_NONINT|SEVAL_NOHIST|SEVAL_RESETLINE);
+#if defined (JOB_CONTROL)
+	      restore_pipeline (1);
+#endif
+
 	      restore_token_state (token_state);
 	      free (token_state);
 
@@ -356,6 +368,7 @@ run_pending_traps ()
 	    }
 
 	  pending_traps[sig] = 0;
+	  running_trap = 0;
 
 #if defined (HAVE_POSIX_SIGNALS)
 	  sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
