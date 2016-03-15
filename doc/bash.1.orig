@@ -324,8 +324,8 @@ option may be used when the shell is started to inhibit this behavior.
 .PP
 When a login shell exits,
 .B bash
-reads and executes commands from the file \fI~/.bash_logout\fP, if it
-exists.
+reads and executes commands from the files \fI~/.bash_logout\fP
+and \fI/etc/bash.bash_logout\fP, if the files exists.
 .PP
 When an interactive shell that is not a login shell is started,
 .B bash
@@ -9842,6 +9842,9 @@ The \fBbash\fP executable
 .TP
 .FN /etc/profile
 The systemwide initialization file, executed for login shells
+.TP
+.FN /etc/bash.bash_logout
+The systemwide login shell cleanup file, executed when a login shell exits
 .TP
 .FN ~/.bash_profile
 The personal initialization file, executed for login shells
