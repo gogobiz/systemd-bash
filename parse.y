@@ -3693,6 +3693,17 @@ eof_error:
 	    }
 	  else if MBTEST((tflags & LEX_CKCOMMENT) && ch == '#' && (lex_rwlen == 0 || ((tflags & LEX_INWORD) && lex_wlen == 0)))
 	    ;	/* don't modify LEX_RESWDOK if we're starting a comment */
+	  /* Allow `do' followed by space, tab, or newline to preserve the
+	     RESWDOK flag, but reset the reserved word length counter so we
+	     can read another one. */
+	  else if MBTEST(((tflags & LEX_INCASE) == 0) &&
+			  (isblank(ch) || ch == '\n') &&
+			  lex_rwlen == 2 &&
+			  STREQN (ret + retind - 2, "do", 2))
+{
+/*itrace("parse_comsub:%d: lex_incase == 1 found `%c', found \"do\"", line_number, ch);*/
+	    lex_rwlen = 0;
+}
 	  else if MBTEST((tflags & LEX_INCASE) && ch != '\n')
 	    /* If we can read a reserved word and we're in case, we're at the
 	       point where we can read a new pattern list or an esac.  We
