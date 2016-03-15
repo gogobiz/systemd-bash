@@ -23,6 +23,8 @@
    what POSIX.2 specifies. */
 #define CONTINUE_AFTER_KILL_ERROR
 
+#define NON_INTERACTIVE_LOGIN_SHELLS
+
 /* Define BREAK_COMPLAINS if you want the non-standard, but useful
    error messages about `break' and `continue' out of context. */
 #define BREAK_COMPLAINS
