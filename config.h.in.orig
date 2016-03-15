@@ -223,7 +223,7 @@
 
 /* System paths */
 
-#define DEFAULT_MAIL_DIRECTORY "/var/spool/mail"
+#define DEFAULT_MAIL_DIRECTORY "/usr/spool/mail"
 
 /* Characteristics of the system's header files and libraries that affect
    the compilation environment. */
