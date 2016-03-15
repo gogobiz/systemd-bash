@@ -1,0 +1,8 @@
+*.o
+*.a
+Makefile
+builtins/*.c
+bash
+bashversion
+cscop*
+po/*

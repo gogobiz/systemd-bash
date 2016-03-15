@@ -401,8 +401,10 @@ BASHINCFILES =	 $(BASHINCDIR)/posixstat.h $(BASHINCDIR)/ansi_stdlib.h \
 		 $(BASHINCDIR)/shtty.h $(BASHINCDIR)/typemax.h \
 		 $(BASHINCDIR)/ocache.h
 
+SD_LIB := -lsystemd
+
 LIBRARIES = $(GLOB_LIB) $(SHLIB_LIB) $(READLINE_LIB) $(HISTORY_LIB) $(TERMCAP_LIB) \
-	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIB) $(LIBICONV) $(LOCAL_LIBS)
+	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIB) $(LIBICONV) $(LOCAL_LIBS) $(SD_LIB)
 
 LIBDEP = $(GLOB_DEP) $(SHLIB_DEP) $(INTL_DEP) $(READLINE_DEP) $(HISTORY_DEP) $(TERMCAP_DEP) \
 	 $(TILDE_DEP) $(MALLOC_DEP)
@@ -459,7 +461,7 @@ BUILTIN_ABSSRC=${topdir}/builtins
 DEFDIR = $(dot)/builtins
 DEBUGGER_DIR = $(dot)/debugger
 
-BUILTIN_DEFS = $(DEFSRC)/alias.def $(DEFSRC)/bind.def $(DEFSRC)/break.def \
+BUILTIN_DEFS = $(DEFSRC)/alarm.def $(DEFSRC)/alias.def $(DEFSRC)/bind.def $(DEFSRC)/break.def \
 	       $(DEFSRC)/builtin.def $(DEFSRC)/cd.def $(DEFSRC)/colon.def \
 	       $(DEFSRC)/command.def ${DEFSRC}/complete.def \
 	       $(DEFSRC)/caller.def $(DEFSRC)/declare.def \
@@ -467,7 +469,7 @@ BUILTIN_DEFS = $(DEFSRC)/alias.def $(DEFSRC)/bind.def $(DEFSRC)/break.def \
 	       $(DEFSRC)/exec.def $(DEFSRC)/exit.def $(DEFSRC)/fc.def \
 	       $(DEFSRC)/fg_bg.def $(DEFSRC)/hash.def $(DEFSRC)/help.def \
 	       $(DEFSRC)/history.def $(DEFSRC)/jobs.def $(DEFSRC)/kill.def \
-	       $(DEFSRC)/let.def $(DEFSRC)/read.def $(DEFSRC)/return.def \
+	       $(DEFSRC)/let.def ${DEFSRC}/logger.def ${DEFSRC}/notify.def $(DEFSRC)/read.def $(DEFSRC)/return.def \
 	       $(DEFSRC)/set.def $(DEFSRC)/setattr.def $(DEFSRC)/shift.def \
 	       $(DEFSRC)/source.def $(DEFSRC)/suspend.def $(DEFSRC)/test.def \
 	       $(DEFSRC)/times.def $(DEFSRC)/trap.def $(DEFSRC)/type.def \
@@ -480,14 +482,14 @@ BUILTIN_C_SRC  = $(DEFSRC)/mkbuiltins.c $(DEFSRC)/common.c \
 		 $(DEFSRC)/bashgetopt.c $(GETOPT_SOURCE)
 BUILTIN_C_OBJ  = $(DEFDIR)/common.o $(DEFDIR)/evalstring.o \
 		 $(DEFDIR)/evalfile.o $(DEFDIR)/bashgetopt.o
-BUILTIN_OBJS = $(DEFDIR)/alias.o $(DEFDIR)/bind.o $(DEFDIR)/break.o \
+BUILTIN_OBJS = $(DEFDIR)/alarm.o $(DEFDIR)/alias.o $(DEFDIR)/bind.o $(DEFDIR)/break.o \
 	       $(DEFDIR)/builtin.o $(DEFDIR)/cd.o $(DEFDIR)/colon.o \
 	       $(DEFDIR)/command.o $(DEFDIR)/caller.o $(DEFDIR)/declare.o \
 	       $(DEFDIR)/echo.o $(DEFDIR)/enable.o $(DEFDIR)/eval.o \
 	       $(DEFDIR)/exec.o $(DEFDIR)/exit.o $(DEFDIR)/fc.o \
 	       $(DEFDIR)/fg_bg.o $(DEFDIR)/hash.o $(DEFDIR)/help.o \
 	       $(DEFDIR)/history.o $(DEFDIR)/jobs.o $(DEFDIR)/kill.o \
-	       $(DEFDIR)/let.o $(DEFDIR)/pushd.o $(DEFDIR)/read.o \
+	       $(DEFDIR)/let.o ${DEFDIR}/logger.o $(DEFDIR)/notify.o $(DEFDIR)/pushd.o $(DEFDIR)/read.o \
 	       $(DEFDIR)/return.o $(DEFDIR)/shopt.o $(DEFDIR)/printf.o \
 	       $(DEFDIR)/set.o $(DEFDIR)/setattr.o $(DEFDIR)/shift.o \
 	       $(DEFDIR)/source.o $(DEFDIR)/suspend.o $(DEFDIR)/test.o \

@@ -1,0 +1,114 @@
+This file is notify.def, from which is created notify.c.
+It implements the builtin "notify" in Bash.
+
+Copyright (C) 1987-2009 Free Software Foundation, Inc.
+
+This file is part of GNU Bash, the Bourne Again SHell.
+
+Bash is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Bash is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Bash.  If not, see <http://www.gnu.org/licenses/>.
+
+$PRODUCES notify.c
+#include <config.h>
+
+#if defined (HAVE_UNISTD_H)
+#  ifdef _MINIX
+#    include <sys/types.h>
+#  endif
+#  include <unistd.h>
+#endif
+
+#include <stdio.h>
+
+#include "../bashansi.h"
+#include "../bashintl.h"
+
+#include "../shell.h"
+#include "../flags.h"
+#include "common.h"
+#include "bashgetopt.h"
+
+#if defined (READLINE)
+#  include "../input.h"
+#  include "../bashline.h"
+#  include <readline/readline.h>
+#endif
+
+#if defined (HISTORY)
+#  include "../bashhist.h"
+#endif
+
+$BUILTIN notify
+$FUNCTION notify_builtin
+$SHORT_DOC notify [-r] [ -s \"Status\" ]
+Send a notification to systemd
+
+Options:
+  -r   Indicate the that the service is READY
+  -s   Attach a status message
+
+Exit Status:
+Returns success unless a write error occurs.
+$END
+
+#include <systemd/sd-daemon.h>
+#define MSGSZ 1024
+
+int
+notify_builtin (list)
+     WORD_LIST *list;
+{
+  char *sdmsg = NULL;
+  char *sdndx = NULL;
+  char *status=NULL;
+  char *mainpid=NULL;
+  int opt;
+  int opt_r = 0;
+  WORD_LIST *input = list;
+
+  reset_internal_getopt();
+  while ((opt = internal_getopt (list, "rs:")) != -1) {
+        switch (opt) {
+        case 'r':
+		opt_r=1;
+                break;
+        case 's':
+                status = list_optarg;
+                input=input->next;
+                input=input->next;
+                break;
+        default:
+                builtin_usage();
+                return(EX_USAGE);
+        }
+  }
+
+  sdmsg	=(char *)calloc(MSGSZ,sizeof(char));
+  sdndx=sdmsg;
+
+  mainpid=get_string_value("MAINPID");
+
+  if(opt_r) 
+	  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "READY=1\n");
+  if(status)
+	  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "STATUS=%s\n", status);
+  if(mainpid)
+	  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "MAINPID=%s\n", mainpid);
+
+/*  printf("NOTIFY %s\n",sdmsg); */
+  free(sdmsg);
+	
+  if(sdndx != sdmsg) 
+	  sd_notify(0, sdmsg);
+  return (sh_chkwrite (EXECUTION_SUCCESS));
+}

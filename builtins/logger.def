@@ -1,0 +1,233 @@
+This file is logger.def, from which is created logger.c.
+It implements the builtin "logger" in Bash.
+
+Copyright (C) 1987-2009 Free Software Foundation, Inc.
+
+This file is part of GNU Bash, the Bourne Again SHell.
+
+Bash is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Bash is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Bash.  If not, see <http://www.gnu.org/licenses/>.
+
+$PRODUCES logger.c
+#include <config.h>
+
+#if defined (HAVE_UNISTD_H)
+#  ifdef _MINIX
+#    include <sys/types.h>
+#  endif
+#  include <unistd.h>
+#endif
+
+#include <stdio.h>
+
+#include "../bashansi.h"
+#include "../bashintl.h"
+
+#include "../shell.h"
+#include "../flags.h"
+#include "common.h"
+#include "bashgetopt.h"
+
+#if defined (READLINE)
+#  include "../input.h"
+#  include "../bashline.h"
+#  include <readline/readline.h>
+#endif
+
+#if defined (HISTORY)
+#  include "../bashhist.h"
+#endif
+
+$BUILTIN logger
+$FUNCTION logger_builtin
+$DEPENDS_ON V9_ECHO
+$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables ] log message 
+Send a message to the systemd journal
+
+Options:
+  -t  Name the syslog identifier string
+  -p  Set the log entry priority (emerg, alert, crit, err, warn, notice, info, debug)
+  -e  Send a KEY=value pair along with the message to the journal
+
+Exit Status:
+Returns success unless a write error occurs.
+$END
+
+#include <systemd/sd-journal.h>
+
+int
+logger_priority(pstr)
+  char * pstr;
+{
+
+	char *pri;
+	pri = pstr;
+	while(*pri && *pri!='.') pri++;
+
+
+	if(pri && *pri) {
+		pri++; 
+	} else {
+		pri=pstr;
+	}
+	
+	if(pri && pri[0]) {
+		switch(pri[0]){
+			case 'a': return LOG_ALERT;
+			case 'c': return LOG_CRIT;
+			case 'w': return LOG_WARNING;
+			case 'i': return LOG_INFO;
+			case 'n': return LOG_NOTICE;
+			case 'e': if (pri[1]=='r')
+					return LOG_ERR;
+				 else return LOG_EMERG;
+		}
+	}
+	return LOG_DEBUG;
+}
+
+#define MAXSZ 1024
+
+
+
+int
+logger_builtin (list)
+     WORD_LIST *list;
+{
+  int c, r, opt;
+  int priority = LOG_INFO;
+  char *tag = "";
+  char *logndx, *logbuf;
+  char *temp = NULL;
+  WORD_LIST *input = list;
+  struct iovec iov[10];
+  int          icnt=0;
+
+  logbuf = (char *)calloc(MAXSZ,sizeof(char));
+  if(logbuf==NULL) return(EX_MISCERROR);
+  logndx = logbuf;
+
+  reset_internal_getopt();
+  while ((opt = internal_getopt (list, "t:p:e:")) != -1) {
+        switch (opt) {
+        case 'e':
+		iov[icnt].iov_base=logndx;
+		logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "%s", list_optarg);
+		iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+		icnt++;
+		input=input->next;
+		input=input->next;
+                break;
+        case 't':
+                tag = list_optarg;
+		input=input->next;
+		input=input->next;
+                break;
+        case 'p':
+                priority = logger_priority(list_optarg);
+		input=input->next;
+		input=input->next;
+		break;
+        default:
+                free(logbuf);
+                builtin_usage();
+                return(EX_USAGE);
+        }
+  }
+
+  if(input && input->word && 0==strncmp(input->word->word,"--",2))
+    input=input->next;
+
+
+  terminate_immediately++;
+
+  /* PRIORITY */
+  iov[icnt].iov_base=logndx;
+  logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "PRIORITY=%d", priority);
+  iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+  icnt++;
+
+  /* IDENTIFIER */
+  if(tag) {
+    iov[icnt].iov_base=logndx;
+    logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "SYSLOG_IDENTIFIER=%s", tag);
+    iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+    icnt++;
+  }
+
+  /* MESSAGE */
+  iov[icnt].iov_base=logndx;
+  logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "MESSAGE=");
+  while (input)
+    {
+      temp = input->word->word;
+      if (temp)
+	{
+            logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "%s", temp);
+            if(input->next) {
+                logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), " ", temp);
+	    }
+            
+	}
+      input = input->next;
+    }
+  iov[icnt].iov_len=logndx-(char*)iov[icnt].iov_base;
+  icnt++;
+  {
+    SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
+    ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
+    char *funcname_s=NULL, *source_s=NULL, *lineno_s=NULL;
+  
+    GET_ARRAY_FROM_VAR ("FUNCNAME", funcname_v, funcname_a);
+    GET_ARRAY_FROM_VAR ("BASH_SOURCE", bash_source_v, bash_source_a);
+    GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
+  
+    if (bash_lineno_a && ! array_empty (bash_lineno_a)) {
+        lineno_s = array_reference (bash_lineno_a, 0);
+        iov[icnt].iov_base=logndx;
+        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_LINENO=%s", lineno_s);
+        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+        icnt++;
+    }
+    if (bash_source_a && ! array_empty (bash_source_a)) {
+        source_s = array_reference (bash_source_a, 1);
+        iov[icnt].iov_base=logndx;
+        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_SOURCE=%s", source_s);
+        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+        icnt++;
+    }
+    if (funcname_a && ! array_empty (funcname_a)) {
+        funcname_s = array_reference (funcname_a, 1);
+        iov[icnt].iov_base=logndx;
+        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_FUNCTION=%s", funcname_s);
+        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+        icnt++;
+    }
+  } 
+
+  {
+     char *trace=NULL;
+     trace=get_string_value("TRACE");
+     if(trace) {
+        iov[icnt].iov_base=logndx;
+        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "TRACE=%s", trace);
+        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+        icnt++;
+     }
+  }
+  sd_journal_sendv(iov, icnt);
+  free(logbuf);
+
+  terminate_immediately--;
+  return (sh_chkwrite (EXECUTION_SUCCESS));
+}
