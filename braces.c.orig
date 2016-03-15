@@ -535,11 +535,6 @@ brace_gobbler (text, tlen, indx, satisfy)
 	{
 	  if (c == quoted)
 	    quoted = 0;
-#if defined (SHELL)
-         /* The shell allows quoted command substitutions */
-         if (quoted == '"' && c == '$' && text[i+1] == '(')    /*)*/
-           goto comsub;
-#endif
 	  ADVANCE_CHAR (text, tlen, i);
 	  continue;
 	}
@@ -555,7 +550,6 @@ brace_gobbler (text, tlen, indx, satisfy)
       /* Pass new-style command and process substitutions through unchanged. */
       if ((c == '$' || c == '<' || c == '>') && text[i+1] == '(')			/* ) */
 	{
-comsub:
 	  si = i + 2;
 	  t = extract_command_subst (text, &si, 0);
 	  i = si;
