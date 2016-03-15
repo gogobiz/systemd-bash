@@ -3308,8 +3308,7 @@ the syntax \fB[.\fP\fIsymbol\fP\fB.]\fP matches the collating symbol
 .RE
 .PD
 .PP
-If the \fBextglob\fP shell option is enabled using the \fBshopt\fP
-builtin, several extended pattern matching operators are recognized.
+Several extended pattern matching operators are recognized.
 In the following description, a \fIpattern-list\fP is a list of one
 or more patterns separated by a \fB|\fP.
 Composite patterns may be formed using one or more of the following
@@ -3329,6 +3328,14 @@ Matches one or more occurrences of the given patterns
 .TP
 \fB@(\fP\^\fIpattern-list\^\fP\fB)\fP
 Matches one of the given patterns
+.RE
+.PD
+.PP
+If the \fBextglob\fP shell option is enabled using the \fBshopt\fP
+builtin, following pattern matching operator is recognized as well:
+.sp 1
+.PD 0
+.RS
 .TP
 \fB!(\fP\^\fIpattern-list\^\fP\fB)\fP
 Matches anything except one of the given patterns
