@@ -888,6 +888,8 @@ BASH_FUNC_DUP2_CLOEXEC_CHECK
 BASH_SYS_PGRP_SYNC
 BASH_SYS_SIGNAL_VINTAGE
 
+AC_CHECK_DECLS([AUDIT_USER_TTY],,, [[#include <linux/audit.h>]])
+
 dnl checking for the presence of certain library symbols
 BASH_SYS_ERRLIST
 BASH_SYS_SIGLIST
