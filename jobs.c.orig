@@ -3067,7 +3067,6 @@ waitchld (wpid, block)
   PROCESS *child;
   pid_t pid;
   int call_set_current, last_stopped_job, job, children_exited, waitpid_flags;
-  int called_from_sighand = sigchld;
   static int wcontinued = WCONTINUED;	/* run-time fix for glibc problem */
 
   call_set_current = children_exited = 0;
@@ -3192,17 +3191,7 @@ waitchld (wpid, block)
 	  longjmp (wait_intr_buf, 1);
 	}
 
-      /* Queue up the trap handler if we're called directly from within the
-         signal handler. */
-      if (called_from_sighand)
-	{
-	  int i = children_exited;
-	  interrupt_immediately = 0;
-	  while (i--)
-	    trap_handler (SIGCHLD);
-	}
-      else
-	run_sigchld_trap (children_exited);
+      run_sigchld_trap (children_exited);
     }
 
   /* We have successfully recorded the useful information about this process
