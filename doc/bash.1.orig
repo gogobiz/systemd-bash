@@ -9633,6 +9633,7 @@ and
 which are unscaled values.
 The return status is 0 unless an invalid option or argument is supplied,
 or an error occurs while setting a new limit.
+In POSIX Mode 512-byte blocks are used for the `-c' and `-f' options.
 .RE
 .TP
 \fBumask\fP [\fB\-p\fP] [\fB\-S\fP] [\fImode\fP]
