@@ -659,7 +659,7 @@ BASH_HEADER_INTTYPES
 AC_CHECK_HEADERS(unistd.h stdlib.h stdarg.h varargs.h limits.h string.h \
 		 memory.h locale.h termcap.h termio.h termios.h dlfcn.h \
 		 stddef.h stdint.h netdb.h pwd.h grp.h strings.h regex.h \
-		 syslog.h ulimit.h)
+		 syslog.h ulimit.h elf.h)
 AC_CHECK_HEADERS(sys/pte.h sys/stream.h sys/select.h sys/file.h \
 		 sys/resource.h sys/param.h sys/socket.h sys/stat.h \
 		 sys/time.h sys/times.h sys/types.h sys/wait.h)
@@ -723,7 +723,7 @@ dnl checks for system calls
 AC_CHECK_FUNCS(dup2 eaccess fcntl getdtablesize getgroups gethostname \
 		getpagesize getpeername getrlimit getrusage gettimeofday \
 		kill killpg lstat readlink sbrk select setdtablesize \
-		setitimer tcgetpgrp uname ulimit waitpid)
+		setitimer tcgetpgrp uname ulimit waitpid pread)
 AC_REPLACE_FUNCS(rename)
 
 dnl checks for c library functions
