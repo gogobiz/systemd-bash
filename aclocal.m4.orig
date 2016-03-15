@@ -1284,7 +1284,7 @@ main()
 	wait(&status);
 	exit(ok ? 0 : 5);
 }
-], bash_cv_pgrp_pipe=yes,bash_cv_pgrp_pipe=yes,
+], bash_cv_pgrp_pipe=no,bash_cv_pgrp_pipe=yes,
    [AC_MSG_WARN(cannot check pgrp synchronization if cross compiling -- defaulting to no)
     bash_cv_pgrp_pipe=no])
 ])
