@@ -51,7 +51,7 @@
 /* Define DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS if you don't want builtins
    like `echo' and `printf' to report errors when output does not succeed
    due to EPIPE. */
-/* #define DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS */
+#define DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS
 
 /* The default value of the PATH variable. */
 #ifndef DEFAULT_PATH_VALUE
