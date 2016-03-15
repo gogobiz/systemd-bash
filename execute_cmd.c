@@ -5049,7 +5049,7 @@ shell_execve (command, args, env)
 		  Elf32_Ehdr ehdr;
 		  Elf32_Phdr *phdr;
                   Elf32_Shdr *shdr;
-		  int nphdr, nshdr;
+		  Elf32_Half nphdr, nshdr;
 
 		  /* We have to copy the data since the sample buffer
 		     might not be aligned correctly to be accessed as
@@ -5057,12 +5057,12 @@ shell_execve (command, args, env)
 		  memcpy (&ehdr, sample, sizeof (Elf32_Ehdr));
 
 		  nshdr = ehdr.e_shnum;
-		  shdr = (Elf32_Shdr *) malloc (nshdr * ehdr.e_shentsize);
+		  shdr = (Elf32_Shdr *) malloc ((size_t)nshdr * (size_t)ehdr.e_shentsize);
                   
 		  if (shdr != NULL)
 		    {
 #ifdef HAVE_PREAD
-		      sample_len = pread (fd, shdr, nshdr * ehdr.e_shentsize,
+		      sample_len = pread (fd, shdr, (size_t)nshdr * (size_t)ehdr.e_shentsize,
 					  ehdr.e_shoff);
 #else
 		      if (lseek (fd, ehdr.e_shoff, SEEK_SET) != -1)
@@ -5104,11 +5104,11 @@ shell_execve (command, args, env)
 		    }
 
 		  nphdr = ehdr.e_phnum;
-		  phdr = (Elf32_Phdr *) malloc (nphdr * ehdr.e_phentsize);
+		  phdr = (Elf32_Phdr *) malloc ((size_t)nphdr * (size_t)ehdr.e_phentsize);
 		  if (phdr != NULL)
 		    {
 #ifdef HAVE_PREAD
-		      sample_len = pread (fd, phdr, nphdr * ehdr.e_phentsize,
+		      sample_len = pread (fd, phdr, (size_t)nphdr * (size_t)ehdr.e_phentsize,
 					  ehdr.e_phoff);
 #else
 		      if (lseek (fd, ehdr.e_phoff, SEEK_SET) != -1)
@@ -5133,7 +5133,7 @@ shell_execve (command, args, env)
 		  Elf64_Ehdr ehdr;
 		  Elf64_Phdr *phdr;
                   Elf64_Shdr *shdr;
-		  int nphdr, nshdr;
+		  Elf32_Half nphdr, nshdr;
 
 		  /* We have to copy the data since the sample buffer
 		     might not be aligned correctly to be accessed as
@@ -5141,11 +5141,11 @@ shell_execve (command, args, env)
 		  memcpy (&ehdr, sample, sizeof (Elf64_Ehdr));
 
 		  nshdr = ehdr.e_shnum;
-		  shdr = (Elf64_Shdr *) malloc (nshdr * ehdr.e_shentsize);
+		  shdr = (Elf64_Shdr *) malloc ((size_t)nshdr * (size_t)ehdr.e_shentsize);
 		  if (shdr != NULL)
 		    {
 #ifdef HAVE_PREAD
-		      sample_len = pread (fd, shdr, nshdr * ehdr.e_shentsize,
+		      sample_len = pread (fd, shdr, (size_t)nshdr * (size_t)ehdr.e_shentsize,
 					  ehdr.e_shoff);
 #else
 		      if (lseek (fd, ehdr.e_shoff, SEEK_SET) != -1)
@@ -5187,11 +5187,11 @@ shell_execve (command, args, env)
 		    }
 
 		  nphdr = ehdr.e_phnum;
-		  phdr = (Elf64_Phdr *) malloc (nphdr * ehdr.e_phentsize);
+		  phdr = (Elf64_Phdr *) malloc ((size_t)nphdr * (size_t)ehdr.e_phentsize);
 		  if (phdr != NULL)
 		    {
 #ifdef HAVE_PREAD
-		      sample_len = pread (fd, phdr, nphdr * ehdr.e_phentsize,
+		      sample_len = pread (fd, phdr, (size_t)nphdr * (size_t)ehdr.e_phentsize,
 					  ehdr.e_phoff);
 #else
 		      if (lseek (fd, ehdr.e_phoff, SEEK_SET) != -1)
@@ -5213,8 +5213,8 @@ shell_execve (command, args, env)
 
 	      if (offset != -1)
 		{
-		  size_t maxlen = 0;
-		  size_t actlen = 0;
+		  ssize_t maxlen = 0;
+		  ssize_t actlen = 0;
 		  char *interp = NULL;
 
 		  do
@@ -5263,7 +5263,8 @@ shell_execve (command, args, env)
 	    }
 #endif
 #if defined (HAVE_HASH_BANG_EXEC) || defined (HAVE_ELF_H)
-	  close (fd);
+          if (fd >= 0)
+	    close (fd);
 #endif
 	  errno = i;
 	  file_error (command);
