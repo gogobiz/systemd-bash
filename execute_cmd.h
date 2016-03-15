@@ -22,6 +22,8 @@
 #define _EXECUTE_CMD_H_
 
 #include "stdc.h"
+#include "variables.h"
+#include "command.h"
 
 extern struct fd_bitmap *new_fd_bitmap __P((int));
 extern void dispose_fd_bitmap __P((struct fd_bitmap *));

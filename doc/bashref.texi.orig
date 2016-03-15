@@ -7642,7 +7642,7 @@ The latest version of Bash is always available for FTP from
 @uref{ftp://ftp.gnu.org/pub/gnu/bash/}.
 
 Once you have determined that a bug actually exists, use the
-@code{bashbug} command to submit a bug report.
+@code{bashbug} command (from the source package) to submit a bug report.
 If you have a fix, you are encouraged to mail that as well!
 Suggestions and `philosophical' bug reports may be mailed
 to @email{bug-bash@@gnu.org} or posted to the Usenet
@@ -7664,9 +7664,6 @@ to reproduce it.
 @end itemize
 
 @noindent
-@code{bashbug} inserts the first three items automatically into
-the template it provides for filing a bug report.
-
 Please send all reports concerning this manual to
 @email{chet.ramey@@case.edu}.
 

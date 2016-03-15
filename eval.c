@@ -53,6 +53,7 @@ extern int last_command_exit_value, stdin_redir;
 extern int need_here_doc;
 extern int current_command_number, current_command_line_count, line_number;
 extern int expand_aliases;
+extern int rpm_requires;
 
 static void send_pwd_to_eterm __P((void));
 static sighandler alrm_catcher __P((int));
@@ -136,7 +137,7 @@ reader_loop ()
 
       if (read_command () == 0)
 	{
-	  if (interactive_shell == 0 && read_but_dont_execute)
+	  if (interactive_shell == 0 && (read_but_dont_execute && !rpm_requires))
 	    {
 	      last_command_exit_value = EXECUTION_SUCCESS;
 	      dispose_command (global_command);

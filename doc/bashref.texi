@@ -5563,6 +5563,13 @@ standard.  @xref{Bash POSIX Mode}, for a description of the Bash
 @item --restricted
 Make the shell a restricted shell (@pxref{The Restricted Shell}).
 
+@item --rpm-requires
+Produce the list of files that are required for the 
+shell script to run.  This implies '-n' and is subject
+to the same limitations as compile time error checking checking;
+Command substitutions, Conditional expressions and @command{eval}
+are not parsed so some dependencies may be missed.
+
 @item --verbose
 Equivalent to @option{-v}.  Print shell input lines as they're read.
 
