@@ -10,8 +10,7 @@ Summary: The GNU Bourne Again shell
 Release: 19%{?dist}
 Group: System Environment/Shells
 License: GPLv3+
-Url: http://www.gnu.org/software/bash
-Source0: ftp://ftp.gnu.org/gnu/bash/bash-%{baseversion}.tar.gz
+Source0: systemd-bash.tar.gz
 
 Requires: systemd-libs pcre glibc elfutils-libelf bzip2-libs xz-libs libselinux libcap ncurses-libs  libattr
 BuildRequires: texinfo bison
@@ -29,7 +28,7 @@ incorporates useful features from the Korn shell (ksh) and the C shell
 
 %prep
 #%setup -q -a 2
-%setup -q -n %{oname}-%{baseversion}
+%setup -q -n %{name}
 
 echo %{version} > _distribution
 echo %{release} > _patchlevel
