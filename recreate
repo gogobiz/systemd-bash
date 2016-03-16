@@ -1,0 +1,53 @@
+#! /usr/bin/python
+import re
+import os
+import shutil 
+import sys
+
+filemap={}
+arglist=[]
+argmap={}
+
+os.system("rpm2cpio bash-4.2.46-19.el7.src.rpm | cpio -id")
+
+f=open("bash.spec")
+for line in f:
+	m=re.match("^Patch([0-9]+): (.*)\n", line)
+	if m:
+		(num,name)=(m.group(1),m.group(2))
+		name=name.split("/")[-1]
+		print num,name
+		filemap[num]=name	
+	m=re.match("^%patch([0-9]+) (\-p[0-9]+).*\n", line)
+	if m:
+		(num,args)=(m.group(1),m.group(2))
+		print num,args
+		argmap[num]=args	
+		arglist.append(num)
+
+f.close()
+
+if os.path.lexists("bash-4.2"):
+	shutil.rmtree("bash-4.2")
+
+os.system("/bin/tar -xvf bash-4.2.tar.gz")
+os.chdir("bash-4.2")
+os.system("git init .")
+os.system("git add .")
+os.system("git commit -m 'Pristine Bash 4.2 Sources'")
+os.system("git tag Pristine")
+
+for pnum in arglist:
+	cmd="patch %s < ../%s"%(argmap[pnum],filemap[pnum])
+	print cmd
+	os.system(cmd)
+	os.system("git add .") 
+	os.system("git commit -m '%s'"%(filemap[pnum]) )
+os.system("git tag CentOS")
+os.system("git checkout -b systemd-builtins")
+cmd="patch -p1 < ../bash-systemd.patch"
+os.system(cmd)
+shutil.copyfile("../systemd-bash.spec","systemd-bash.spec")
+os.system("git add .") 
+os.system("git commit -m 'Add builtins for systemd'")
+
