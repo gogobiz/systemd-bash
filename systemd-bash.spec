@@ -2,7 +2,7 @@
 %define patchleveltag .46
 %define baseversion 4.2
 %define oname bash 
-%bcond_without tests
+%bcond_with tests
 
 Version: %{baseversion}%{patchleveltag}
 Name: systemd-bash
