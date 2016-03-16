@@ -48,16 +48,16 @@ mkdir -p $RPM_BUILD_ROOT/bin
 cp bash $RPM_BUILD_ROOT/bin/systemd-bash
 
 %post
-rm -f /bin/bash
 if [ -f /bin/bash ]; then
- mv /bin/bash /bin/bash.orig
+	mv /bin/bash /bin/bash.orig
 fi
+rm -f /bin/bash
 ln -s /bin/systemd-bash /bin/bash
 
 %postun
 rm -f /bin/bash
 if [ -f /bin/bash.orig ]; then
- mv /bin/bash.orig /bin/bash
+	mv /bin/bash.orig /bin/bash
 fi
 
 %if %{with tests}
