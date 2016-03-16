@@ -13,7 +13,7 @@ License: GPLv3+
 Source0: systemd-bash.tar.gz
 
 Requires: systemd-libs pcre glibc elfutils-libelf bzip2-libs xz-libs libselinux libcap ncurses-libs  libattr
-BuildRequires: texinfo bison
+BuildRequires: bison
 BuildRequires: ncurses-devel
 BuildRequires: autoconf, gettext
 Conflicts: filesystem < 3
