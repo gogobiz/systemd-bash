@@ -72,7 +72,9 @@ notify_builtin (list)
   char *sdndx = NULL;
   char *status=NULL;
   char *mainpid=NULL;
+  char *socketvar=NULL;
   int opt;
+  int rc;
   int opt_r = 0;
   int opt_v = 0;
   WORD_LIST *input = list;
@@ -108,13 +110,23 @@ notify_builtin (list)
 	  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "STATUS=%s\n", status);
   if(mainpid)
 	  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "MAINPID=%s\n", mainpid);
+  sdndx += snprintf(sdndx, MSGSZ-strlen(sdmsg), "ERRNO=0");
 
-  if(opt_v)
+  socketvar=get_string_value("NOTIFY_SOCKET");
+
+  if(opt_v) {
     printf("NOTIFY %s\n",sdmsg); 
+    printf("NOTIFY_SOCKET=%s\n",socketvar?socketvar:"{unset}"); 
+  }
 
-  free(sdmsg);
 	
   if(sdndx != sdmsg) 
-	  sd_notify(0, sdmsg);
+	  rc = sd_notify(0, sdmsg);
+
+  free(sdmsg);
+
+  if(opt_v) {
+    printf("notify returns %d\n", rc); 
+  }
   return (sh_chkwrite (EXECUTION_SUCCESS));
 }
