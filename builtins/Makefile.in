@@ -124,7 +124,12 @@ RL_LIBSRC = $(topdir)/lib/readline
 	$(RM) $@
 	$(CC) -c $(CCFLAGS) $<
 
-DEFSRC =  $(srcdir)/alarm.def $(srcdir)/alias.def $(srcdir)/bind.def $(srcdir)/break.def \
+ifneq (@SD_LIB@,)
+SD_DEFSRC := $(foreach m,alarm logger notify,$(srcdir)/$(m).def)
+SD_OFILES := $(foreach m,alarm logger notify,$(srcdir)/$(m).o)
+endif
+
+DEFSRC =  $(srcdir)/alias.def $(srcdir)/bind.def $(srcdir)/break.def \
 	  $(srcdir)/builtin.def $(srcdir)/caller.def \
 	  $(srcdir)/cd.def $(srcdir)/colon.def \
 	  $(srcdir)/command.def $(srcdir)/declare.def $(srcdir)/echo.def \
@@ -132,25 +137,27 @@ DEFSRC =  $(srcdir)/alarm.def $(srcdir)/alias.def $(srcdir)/bind.def $(srcdir)/b
 	  $(srcdir)/exec.def $(srcdir)/exit.def $(srcdir)/fc.def \
 	  $(srcdir)/fg_bg.def $(srcdir)/hash.def $(srcdir)/help.def \
 	  $(srcdir)/history.def $(srcdir)/jobs.def $(srcdir)/kill.def \
-	  $(srcdir)/let.def $(srcdir)/logger.def $(srcdir)/notify.def $(srcdir)/read.def $(srcdir)/return.def \
+	  $(srcdir)/let.def  $(srcdir)/read.def $(srcdir)/return.def \
 	  $(srcdir)/set.def $(srcdir)/setattr.def $(srcdir)/shift.def \
 	  $(srcdir)/source.def $(srcdir)/suspend.def $(srcdir)/test.def \
 	  $(srcdir)/times.def $(srcdir)/trap.def $(srcdir)/type.def \
 	  $(srcdir)/ulimit.def $(srcdir)/umask.def $(srcdir)/wait.def \
 	  $(srcdir)/reserved.def $(srcdir)/pushd.def $(srcdir)/shopt.def \
-	  $(srcdir)/printf.def $(srcdir)/complete.def $(srcdir)/mapfile.def
+	  $(srcdir)/printf.def $(srcdir)/complete.def $(srcdir)/mapfile.def \
+	  $(SD_DEFSRC)
 
 STATIC_SOURCE = common.c evalstring.c evalfile.c getopt.c bashgetopt.c \
 		getopt.h 
 
 OFILES = builtins.o \
-	alarm.o alias.o bind.o break.o builtin.o caller.o cd.o colon.o command.o \
+	alias.o bind.o break.o builtin.o caller.o cd.o colon.o command.o \
 	common.o declare.o echo.o enable.o eval.o evalfile.o \
 	evalstring.o exec.o exit.o fc.o fg_bg.o hash.o help.o history.o \
-	jobs.o kill.o let.o logger.o mapfile.o notify.o \
+	jobs.o kill.o let.o mapfile.o  \
 	pushd.o read.o return.o set.o setattr.o shift.o source.o \
 	suspend.o test.o times.o trap.o type.o ulimit.o umask.o \
-	wait.o getopts.o shopt.o printf.o getopt.o bashgetopt.o complete.o
+	wait.o getopts.o shopt.o printf.o getopt.o bashgetopt.o complete.o \
+	$(SD_OFILES)
 
 CREATED_FILES = builtext.h builtins.c psize.aux pipesize.h
 
