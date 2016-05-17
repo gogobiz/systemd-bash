@@ -51,7 +51,7 @@ $PRODUCES logger.c
 $BUILTIN logger
 $FUNCTION logger_builtin
 $DEPENDS_ON V9_ECHO
-$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables ] log message 
+$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables ... ] log message 
 Send a message to the systemd journal
 
 Options:
@@ -110,8 +110,18 @@ logger_builtin (list)
   char *logndx, *logbuf;
   char *temp = NULL;
   WORD_LIST *input = list;
-  struct iovec iov[10];
+  struct iovec *iov;
   int          icnt=0;
+
+  while(input && input->word) {
+	icnt++;
+	input = input->next;
+  }
+  icnt += 10;
+  iov = (struct iovec *)calloc(icnt,sizeof(struct iovec));
+
+  input = list;
+  icnt = 0;
 
   logbuf = (char *)calloc(MAXSZ,sizeof(char));
   if(logbuf==NULL) return(EX_MISCERROR);
@@ -139,6 +149,7 @@ logger_builtin (list)
 		input=input->next;
 		break;
         default:
+                free(iov);
                 free(logbuf);
                 builtin_usage();
                 return(EX_USAGE);
@@ -226,6 +237,7 @@ logger_builtin (list)
      }
   }
   sd_journal_sendv(iov, icnt);
+  free(iov);
   free(logbuf);
 
   terminate_immediately--;
