@@ -51,7 +51,7 @@ $PRODUCES logger.c
 $BUILTIN logger
 $FUNCTION logger_builtin
 $DEPENDS_ON V9_ECHO
-$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables ... ] log message 
+$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables [ ... ] ] log message 
 Send a message to the systemd journal
 
 Options:
@@ -96,10 +96,6 @@ logger_priority(pstr)
 	return LOG_DEBUG;
 }
 
-#define MAXSZ 1024
-
-
-
 int
 logger_builtin (list)
      WORD_LIST *list;
@@ -112,18 +108,21 @@ logger_builtin (list)
   WORD_LIST *input = list;
   struct iovec *iov;
   int          icnt=0;
+  size_t tot = 0;
 
-  while(input && input->word) {
+  while(input && input->word && input->word->word) {
+	tot += strlen(input->word->word) + 1;
 	icnt++;
 	input = input->next;
   }
   icnt += 10;
+  tot += 1024;
   iov = (struct iovec *)calloc(icnt,sizeof(struct iovec));
 
   input = list;
   icnt = 0;
 
-  logbuf = (char *)calloc(MAXSZ,sizeof(char));
+  logbuf = (char *)calloc(tot,sizeof(char));
   if(logbuf==NULL) return(EX_MISCERROR);
   logndx = logbuf;
 
@@ -132,7 +131,7 @@ logger_builtin (list)
         switch (opt) {
         case 'e':
 		iov[icnt].iov_base=logndx;
-		logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "%s", list_optarg);
+		logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", list_optarg);
 		iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
 		icnt++;
 		input=input->next;
@@ -164,29 +163,29 @@ logger_builtin (list)
 
   /* PRIORITY */
   iov[icnt].iov_base=logndx;
-  logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "PRIORITY=%d", priority);
+  logndx += snprintf(logndx,  tot-strlen(logbuf), "PRIORITY=%d", priority);
   iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
   icnt++;
 
   /* IDENTIFIER */
   if(tag) {
     iov[icnt].iov_base=logndx;
-    logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "SYSLOG_IDENTIFIER=%s", tag);
+    logndx += snprintf(logndx,  tot-strlen(logbuf), "SYSLOG_IDENTIFIER=%s", tag);
     iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
     icnt++;
   }
 
   /* MESSAGE */
   iov[icnt].iov_base=logndx;
-  logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "MESSAGE=");
+  logndx += snprintf(logndx,  tot-strlen(logbuf), "MESSAGE=");
   while (input)
     {
       temp = input->word->word;
       if (temp)
 	{
-            logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "%s", temp);
+            logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", temp);
             if(input->next) {
-                logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), " ", temp);
+                logndx += snprintf(logndx,  tot-strlen(logbuf), " ", temp);
 	    }
             
 	}
@@ -206,21 +205,21 @@ logger_builtin (list)
     if (bash_lineno_a && ! array_empty (bash_lineno_a)) {
         lineno_s = array_reference (bash_lineno_a, 0);
         iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_LINENO=%s", lineno_s);
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_LINENO=%s", lineno_s);
         iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
         icnt++;
     }
     if (bash_source_a && ! array_empty (bash_source_a)) {
         source_s = array_reference (bash_source_a, 1);
         iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_SOURCE=%s", source_s);
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_SOURCE=%s", source_s);
         iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
         icnt++;
     }
     if (funcname_a && ! array_empty (funcname_a)) {
         funcname_s = array_reference (funcname_a, 1);
         iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "BASH_FUNCTION=%s", funcname_s);
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_FUNCTION=%s", funcname_s);
         iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
         icnt++;
     }
@@ -231,7 +230,7 @@ logger_builtin (list)
      trace=get_string_value("TRACE");
      if(trace) {
         iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  MAXSZ-strlen(logbuf), "TRACE=%s", trace);
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "TRACE=%s", trace);
         iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
         icnt++;
      }
