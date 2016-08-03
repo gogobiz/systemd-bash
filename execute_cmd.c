@@ -2254,11 +2254,28 @@ execute_pipeline (command, asynchronous, pipe_in, pipe_out, fds_to_close)
   if (lastpipe_flag)
     {
 #if defined (JOB_CONTROL)
-      append_process (savestring (the_printed_command), dollar_dollar_pid, exec_result, lastpipe_jid);
-#endif
+      if (INVALID_JOB (lastpipe_jid) == 0)
+        {
+          append_process (savestring (the_printed_command_except_trap), dollar_dollar_pid, exec_result, lastpipe_jid);
+          lstdin = wait_for (lastpid);
+        }
+      else
+        lstdin = wait_for_single_pid (lastpid);		/* checks bgpids list */
+#else
       lstdin = wait_for (lastpid);
+#endif
+
 #if defined (JOB_CONTROL)
-      exec_result = job_exit_status (lastpipe_jid);
+      /* If wait_for removes the job from the jobs table, use result of last
+	 command as pipeline's exit status as usual.  The jobs list can get
+	 frozen and unfrozen at inconvenient times if there are multiple pipelines
+	 running simultaneously. */
+      if (INVALID_JOB (lastpipe_jid) == 0)
+	exec_result = job_exit_status (lastpipe_jid);
+      else if (pipefail_opt)
+	exec_result = exec_result | lstdin;	/* XXX */
+      /* otherwise we use exec_result */
+
 #endif
       unfreeze_jobs_list ();
     }
