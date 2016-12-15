@@ -7,7 +7,7 @@
 Version: %{baseversion}%{patchleveltag}
 Name: systemd-bash
 Summary: The GNU Bourne Again shell
-Release: 19%{?dist}
+Release: 21%{?dist}
 Group: System Environment/Shells
 License: GPLv3+
 Source0: systemd-bash.tar.gz
