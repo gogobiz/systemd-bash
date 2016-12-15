@@ -2244,10 +2244,14 @@ wait_sigint_handler (sig)
 	  signal_is_trapped (SIGINT) &&
 	  ((sigint_handler = trap_to_sighandler (SIGINT)) == trap_handler))
 	{
-	  interrupt_immediately = 0;
 	  trap_handler (SIGINT);	/* set pending_traps[SIGINT] */
 	  wait_signal_received = SIGINT;
-	  longjmp (wait_intr_buf, 1);
+	  if (interrupt_immediately)
+	    {
+	      interrupt_immediately = 0;
+	      longjmp (wait_intr_buf, 1);
+	    }
+	  SIGRETURN (0);
 	}
       
       ADDINTERRUPT;
