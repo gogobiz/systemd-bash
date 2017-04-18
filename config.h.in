@@ -49,7 +49,7 @@
    This is unrelated to READLINE. */
 #undef BANG_HISTORY
 
-#define SYSLOG_HISTORY
+#define SYSLOG_HISTORY 1
 
 /* Define HISTORY if you want to have access to previously typed commands.
 
