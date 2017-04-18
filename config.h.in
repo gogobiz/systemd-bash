@@ -49,6 +49,8 @@
    This is unrelated to READLINE. */
 #undef BANG_HISTORY
 
+#define SYSLOG_HISTORY
+
 /* Define HISTORY if you want to have access to previously typed commands.
 
    If both HISTORY and READLINE are defined, you can get at the commands
