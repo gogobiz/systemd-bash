@@ -51,10 +51,11 @@ $PRODUCES logger.c
 $BUILTIN logger
 $FUNCTION logger_builtin
 $DEPENDS_ON V9_ECHO
-$SHORT_DOC logger [-t syslogid ] [ -p priority ] [ -e custom variables [ ... ] ] log message 
+$SHORT_DOC logger [-i] [-t syslogid ] [ -p priority ] [ -e custom variables [ ... ] ] log message 
 Send a message to the systemd journal
 
 Options:
+  -i  Set the syslog process id
   -t  Name the syslog identifier string
   -p  Set the log entry priority (emerg, alert, crit, err, warn, notice, info, debug)
   -e  Send a KEY=value pair along with the message to the journal
@@ -102,7 +103,8 @@ logger_builtin (list)
 {
   int c, r, opt;
   int priority = LOG_INFO;
-  char *tag = "";
+  char *tag = getlogin();
+  int include_pid = 0;
   char *logndx, *logbuf;
   char *temp = NULL;
   WORD_LIST *input = list;
@@ -127,13 +129,18 @@ logger_builtin (list)
   logndx = logbuf;
 
   reset_internal_getopt();
-  while ((opt = internal_getopt (list, "t:p:e:")) != -1) {
+  while ((opt = internal_getopt (list, "it:p:e:")) != -1) {
         switch (opt) {
         case 'e':
 		iov[icnt].iov_base=logndx;
 		logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", list_optarg);
 		iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
 		icnt++;
+		input=input->next;
+		input=input->next;
+                break;
+        case 'i':
+                include_pid = 1;
 		input=input->next;
 		input=input->next;
                 break;
@@ -171,6 +178,14 @@ logger_builtin (list)
   if(tag) {
     iov[icnt].iov_base=logndx;
     logndx += snprintf(logndx,  tot-strlen(logbuf), "SYSLOG_IDENTIFIER=%s", tag);
+    iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+    icnt++;
+  }
+
+  /* PID */
+  if(include_pid) {
+    iov[icnt].iov_base=logndx;
+    logndx += snprintf(logndx,  tot-strlen(logbuf), "SYSLOG_PID=%u", getpid());
     iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
     icnt++;
   }
