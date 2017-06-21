@@ -29,6 +29,8 @@ $PRODUCES logger.c
 #endif
 
 #include <stdio.h>
+#define SYSLOG_NAMES
+#include <syslog.h>
 
 #include "../bashansi.h"
 #include "../bashintl.h"
@@ -66,43 +68,50 @@ $END
 
 #include <systemd/sd-journal.h>
 
-int
-logger_priority(pstr)
-  char * pstr;
+static int decode(char *name, CODE *codetab)
 {
+    register CODE *c;
 
-	char *pri;
-	pri = pstr;
-	while(*pri && *pri!='.') pri++;
+    if (isdigit(*name))
+        return (atoi(name));
 
+    for (c = codetab; c->c_name; c++)
+        if (!strcasecmp(name, c->c_name))
+            return (c->c_val);
 
-	if(pri && *pri) {
-		pri++; 
-	} else {
-		pri=pstr;
-	}
-	
-	if(pri && pri[0]) {
-		switch(pri[0]){
-			case 'a': return LOG_ALERT;
-			case 'c': return LOG_CRIT;
-			case 'w': return LOG_WARNING;
-			case 'i': return LOG_INFO;
-			case 'n': return LOG_NOTICE;
-			case 'e': if (pri[1]=='r')
-					return LOG_ERR;
-				 else return LOG_EMERG;
-		}
-	}
-	return LOG_DEBUG;
+    return -1;
 }
+
+static int pencode(char *s)
+{
+    char *save;
+    int fac, lev;
+
+    for (save = s; *s && *s != '.'; ++s);
+    if (*s) {
+        *s = '\0';
+        fac = decode(save, facilitynames);
+        if (fac < 0)
+            errx(EXIT_FAILURE, _("unknown facility name: %s."), save);
+        *s++ = '.';
+    }
+    else {
+        fac = LOG_USER;
+        s = save;
+    }
+    lev = decode(s, prioritynames);
+    if (lev < 0)
+        errx(EXIT_FAILURE, _("unknown priority name: %s."), save);
+    return ((lev & LOG_PRIMASK) | (fac & LOG_FACMASK));
+}
+
 
 int
 logger_builtin (list)
      WORD_LIST *list;
 {
   int c, r, opt;
-  int priority = LOG_INFO;
+  char *priority = "user.notice";
   char *tag = getlogin();
   int include_pid = 0;
   char *logndx, *logbuf;
@@ -150,7 +159,7 @@ logger_builtin (list)
 		input=input->next;
                 break;
         case 'p':
-                priority = logger_priority(list_optarg);
+                priority = list_optarg;
 		input=input->next;
 		input=input->next;
 		break;
@@ -168,9 +177,16 @@ logger_builtin (list)
 
   terminate_immediately++;
 
+  
   /* PRIORITY */
+  
+  int pri = pencode(priority);
   iov[icnt].iov_base=logndx;
-  logndx += snprintf(logndx,  tot-strlen(logbuf), "PRIORITY=%d", priority);
+  logndx += snprintf(logndx,  tot-strlen(logbuf), "PRIORITY=%d", LOG_PRI(pri));
+  iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+  icnt++;
+  iov[icnt].iov_base=logndx;
+  logndx += snprintf(logndx,  tot-strlen(logbuf), "SYSLOG_FACILITY=%d", LOG_FAC(pri));
   iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
   icnt++;
 
