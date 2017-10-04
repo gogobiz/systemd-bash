@@ -650,11 +650,13 @@ unquoted_substring (substr, string)
 INLINE char *
 sub_append_string (source, target, indx, size)
      char *source, *target;
-     int *indx, *size;
+     int *indx;
+     size_t *size;
 {
   if (source)
     {
-      int srclen, n;
+      int n;
+      size_t srclen;
 
       srclen = STRLEN (source);
       if (srclen >= (int)(*size - *indx))
@@ -2713,6 +2715,8 @@ do_compound_assignment (name, value, flags)
       else if (v == 0 || (array_p (v) == 0 && assoc_p (v) == 0) || v->context != variable_context)
         v = make_local_array_variable (name);
       assign_compound_array_list (v, list, flags);
+      if (list)
+	dispose_words (list);
     }
   else
     v = assign_array_from_string (name, value, flags);
@@ -5011,7 +5015,8 @@ process_substitute (string, open_for_read_in_child)
 
 #if defined (JOB_CONTROL)
   old_pipeline_pgrp = pipeline_pgrp;
-  pipeline_pgrp = shell_pgrp;
+  if (pipeline_pgrp == 0 || (subshell_environment & (SUBSHELL_PIPE|SUBSHELL_FORK|SUBSHELL_ASYNC)) == 0)
+    pipeline_pgrp = shell_pgrp;
   save_pipeline (1);
 #endif /* JOB_CONTROL */
 
@@ -7908,7 +7913,7 @@ expand_word_internal (word, quoted, isexp, contains_dollar_at, expanded_somethin
   char *istring;
 
   /* The current size of the above object. */
-  int istring_size;
+  size_t istring_size;
 
   /* Index into ISTRING. */
   int istring_index;
