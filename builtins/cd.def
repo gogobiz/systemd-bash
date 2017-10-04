@@ -200,7 +200,7 @@ cd_builtin (list)
   eflag = 0;
   no_symlinks = no_symbolic_links;
   reset_internal_getopt ();
-  while ((opt = internal_getopt (list, "LP")) != -1)
+  while ((opt = internal_getopt (list, "LPe")) != -1)
     {
       switch (opt)
 	{
