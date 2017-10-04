@@ -2713,6 +2713,8 @@ do_compound_assignment (name, value, flags)
       else if (v == 0 || (array_p (v) == 0 && assoc_p (v) == 0) || v->context != variable_context)
         v = make_local_array_variable (name);
       assign_compound_array_list (v, list, flags);
+      if (list)
+	dispose_words (list);
     }
   else
     v = assign_array_from_string (name, value, flags);
