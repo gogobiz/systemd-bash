@@ -650,11 +650,13 @@ unquoted_substring (substr, string)
 INLINE char *
 sub_append_string (source, target, indx, size)
      char *source, *target;
-     int *indx, *size;
+     int *indx;
+     size_t *size;
 {
   if (source)
     {
-      int srclen, n;
+      int n;
+      size_t srclen;
 
       srclen = STRLEN (source);
       if (srclen >= (int)(*size - *indx))
@@ -7910,7 +7912,7 @@ expand_word_internal (word, quoted, isexp, contains_dollar_at, expanded_somethin
   char *istring;
 
   /* The current size of the above object. */
-  int istring_size;
+  size_t istring_size;
 
   /* Index into ISTRING. */
   int istring_index;
