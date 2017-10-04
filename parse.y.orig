@@ -2442,6 +2442,16 @@ shell_ungetc (c)
     eol_ungetc_lookahead = c;
 }
 
+char *
+parser_remaining_input ()
+{
+  if (shell_input_line == 0)
+    return 0;
+  if (shell_input_line_index < 0 || shell_input_line_index >= shell_input_line_len)
+    return '\0';	/* XXX */
+  return (shell_input_line + shell_input_line_index);
+}
+
 #ifdef INCLUDE_UNUSED
 /* Back the input pointer up by one, effectively `ungetting' a character. */
 static void
@@ -3683,6 +3693,17 @@ eof_error:
 	    }
 	  else if MBTEST((tflags & LEX_CKCOMMENT) && ch == '#' && (lex_rwlen == 0 || ((tflags & LEX_INWORD) && lex_wlen == 0)))
 	    ;	/* don't modify LEX_RESWDOK if we're starting a comment */
+	  /* Allow `do' followed by space, tab, or newline to preserve the
+	     RESWDOK flag, but reset the reserved word length counter so we
+	     can read another one. */
+	  else if MBTEST(((tflags & LEX_INCASE) == 0) &&
+			  (isblank(ch) || ch == '\n') &&
+			  lex_rwlen == 2 &&
+			  STREQN (ret + retind - 2, "do", 2))
+{
+/*itrace("parse_comsub:%d: lex_incase == 1 found `%c', found \"do\"", line_number, ch);*/
+	    lex_rwlen = 0;
+}
 	  else if MBTEST((tflags & LEX_INCASE) && ch != '\n')
 	    /* If we can read a reserved word and we're in case, we're at the
 	       point where we can read a new pattern list or an esac.  We
@@ -3884,8 +3905,8 @@ xparse_dolparen (base, string, indp, flags)
   reset_parser ();
   /* reset_parser clears shell_input_line and associated variables */
   restore_input_line_state (&ls);
-  if (interactive)
-    token_to_read = 0;
+
+  token_to_read = 0;
 
   /* Need to find how many characters parse_and_execute consumed, update
      *indp, if flags != 0, copy the portion of the string parsed into RET
