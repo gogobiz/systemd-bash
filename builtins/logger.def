@@ -70,39 +70,39 @@ $END
 
 static int decode(char *name, CODE *codetab)
 {
-    register CODE *c;
+  register CODE *c;
 
-    if (isdigit(*name))
-        return (atoi(name));
+  if (isdigit(*name))
+    return (atoi(name));
 
-    for (c = codetab; c->c_name; c++)
-        if (!strcasecmp(name, c->c_name))
-            return (c->c_val);
+  for (c = codetab; c->c_name; c++)
+    if (!strcasecmp(name, c->c_name))
+      return (c->c_val);
 
-    return -1;
+  return -1;
 }
 
 static int pencode(char *s)
 {
-    char *save;
-    int fac, lev;
+  char *save;
+  int fac, lev;
 
-    for (save = s; *s && *s != '.'; ++s);
-    if (*s) {
-        *s = '\0';
-        fac = decode(save, facilitynames);
-        if (fac < 0)
-            errx(EXIT_FAILURE, _("unknown facility name: %s."), save);
-        *s++ = '.';
-    }
-    else {
-        fac = LOG_USER;
-        s = save;
-    }
-    lev = decode(s, prioritynames);
-    if (lev < 0)
-        errx(EXIT_FAILURE, _("unknown priority name: %s."), save);
-    return ((lev & LOG_PRIMASK) | (fac & LOG_FACMASK));
+  for (save = s; *s && *s != '.'; ++s);
+  if (*s) {
+    *s = '\0';
+    fac = decode(save, facilitynames);
+    if (fac < 0)
+      errx(EXIT_FAILURE, _("unknown facility name: %s."), save);
+    *s++ = '.';
+  }
+  else {
+    fac = LOG_USER;
+    s = save;
+  }
+  lev = decode(s, prioritynames);
+  if (lev < 0)
+    errx(EXIT_FAILURE, _("unknown priority name: %s."), save);
+  return ((lev & LOG_PRIMASK) | (fac & LOG_FACMASK));
 }
 
 
@@ -123,9 +123,9 @@ logger_builtin (list)
   size_t tot = 0;
 
   while(input && input->word && input->word->word) {
-	tot += strlen(input->word->word) + 1;
-	icnt++;
-	input = input->next;
+    tot += strlen(input->word->word) + 1;
+    icnt++;
+    input = input->next;
   }
   icnt += 10;
   tot += 1024;
@@ -140,36 +140,35 @@ logger_builtin (list)
 
   reset_internal_getopt();
   while ((opt = internal_getopt (list, "it:p:e:")) != -1) {
-        switch (opt) {
-        case 'e':
-		iov[icnt].iov_base=logndx;
-		logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", list_optarg);
-		iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
-		icnt++;
-		input=input->next;
-		input=input->next;
-                break;
-        case 'i':
-                include_pid = 1;
-		input=input->next;
-		input=input->next;
-                break;
-        case 't':
-                tag = list_optarg;
-		input=input->next;
-		input=input->next;
-                break;
-        case 'p':
-                priority = list_optarg;
-		input=input->next;
-		input=input->next;
-		break;
-        default:
-                free(iov);
-                free(logbuf);
-                builtin_usage();
-                return(EX_USAGE);
-        }
+    switch (opt) {
+      case 'e':
+        iov[icnt].iov_base=logndx;
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", list_optarg);
+        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+        icnt++;
+        input=input->next;
+        input=input->next;
+        break;
+      case 'i':
+        include_pid = 1;
+        input=input->next;
+        break;
+      case 't':
+        tag = list_optarg;
+        input=input->next;
+        input=input->next;
+        break;
+      case 'p':
+        priority = list_optarg;
+        input=input->next;
+        input=input->next;
+        break;
+      default:
+        free(iov);
+        free(logbuf);
+        builtin_usage();
+        return(EX_USAGE);
+    }
   }
 
   if(input && input->word && 0==strncmp(input->word->word,"--",2))
@@ -211,18 +210,18 @@ logger_builtin (list)
   iov[icnt].iov_base=logndx;
   logndx += snprintf(logndx,  tot-strlen(logbuf), "MESSAGE=");
   while (input)
+  {
+    temp = input->word->word;
+    if (temp)
     {
-      temp = input->word->word;
-      if (temp)
-	{
-            logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", temp);
-            if(input->next) {
-                logndx += snprintf(logndx,  tot-strlen(logbuf), " ", temp);
-	    }
+      logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", temp);
+      if(input->next) {
+        logndx += snprintf(logndx,  tot-strlen(logbuf), " ", temp);
+      }
             
-	}
-      input = input->next;
     }
+    input = input->next;
+  }
   iov[icnt].iov_len=logndx-(char*)iov[icnt].iov_base;
   icnt++;
   {
@@ -235,37 +234,37 @@ logger_builtin (list)
     GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
   
     if (bash_lineno_a && ! array_empty (bash_lineno_a)) {
-        lineno_s = array_reference (bash_lineno_a, 0);
-        iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_LINENO=%s", lineno_s);
-        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
-        icnt++;
+      lineno_s = array_reference (bash_lineno_a, 0);
+      iov[icnt].iov_base=logndx;
+      logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_LINENO=%s", lineno_s);
+      iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+      icnt++;
     }
     if (bash_source_a && ! array_empty (bash_source_a)) {
-        source_s = array_reference (bash_source_a, 1);
-        iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_SOURCE=%s", source_s);
-        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
-        icnt++;
+      source_s = array_reference (bash_source_a, 1);
+      iov[icnt].iov_base=logndx;
+      logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_SOURCE=%s", source_s);
+      iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+      icnt++;
     }
     if (funcname_a && ! array_empty (funcname_a)) {
-        funcname_s = array_reference (funcname_a, 1);
-        iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_FUNCTION=%s", funcname_s);
-        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
-        icnt++;
+      funcname_s = array_reference (funcname_a, 1);
+      iov[icnt].iov_base=logndx;
+      logndx += snprintf(logndx,  tot-strlen(logbuf), "BASH_FUNCTION=%s", funcname_s);
+      iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+      icnt++;
     }
   } 
 
   {
-     char *trace=NULL;
-     trace=get_string_value("TRACE");
-     if(trace) {
-        iov[icnt].iov_base=logndx;
-        logndx += snprintf(logndx,  tot-strlen(logbuf), "TRACE=%s", trace);
-        iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
-        icnt++;
-     }
+    char *trace=NULL;
+    trace=get_string_value("TRACE");
+    if(trace) {
+      iov[icnt].iov_base=logndx;
+      logndx += snprintf(logndx,  tot-strlen(logbuf), "TRACE=%s", trace);
+      iov[icnt].iov_len = logndx-(char*)iov[icnt].iov_base;
+      icnt++;
+    }
   }
   sd_journal_sendv(iov, icnt);
   free(iov);
