@@ -128,7 +128,7 @@ logger_builtin (list)
     input = input->next;
   }
   icnt += 10;
-  tot += 1024;
+  tot += 2048;
   iov = (struct iovec *)calloc(icnt,sizeof(struct iovec));
 
   input = list;
@@ -209,19 +209,25 @@ logger_builtin (list)
   /* MESSAGE */
   iov[icnt].iov_base=logndx;
   logndx += snprintf(logndx,  tot-strlen(logbuf), "MESSAGE=");
-  while (input)
+  if (input)
   {
-    temp = input->word->word;
-    if (temp)
+    while (input)
     {
-      logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", temp);
-      if(input->next) {
-        logndx += snprintf(logndx,  tot-strlen(logbuf), " ", temp);
+      temp = input->word->word;
+      if (temp)
+      {
+        logndx += snprintf(logndx,  tot-strlen(logbuf), "%s", temp);
+        if(input->next) {
+          logndx += snprintf(logndx,  tot-strlen(logbuf), " ", temp);
+        }
       }
-            
+      input = input->next;
     }
-    input = input->next;
   }
+  else {
+    logndx += fread( logndx, sizeof(char), tot-strlen(logbuf), stdin);
+  }
+  
   iov[icnt].iov_len=logndx-(char*)iov[icnt].iov_base;
   icnt++;
   {
