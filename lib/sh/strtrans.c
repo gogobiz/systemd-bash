@@ -30,6 +30,9 @@
 
 #include "shell.h"
 
+#include "shmbchar.h"
+#include "shmbutil.h"
+
 #ifdef ESC
 #undef ESC
 #endif
@@ -74,7 +77,7 @@ ansicstr (string, len, flags, sawc, rlen)
 	    case 'a': c = '\a'; break;
 	    case 'v': c = '\v'; break;
 #else
-	    case 'a': c = '\007'; break;
+	    case 'a': c = (int) 0x07; break;
 	    case 'v': c = (int) 0x0B; break;
 #endif
 	    case 'b': c = '\b'; break;
@@ -208,6 +211,11 @@ ansic_quote (str, flags, rlen)
   char *r, *ret, *s;
   int l, rsize;
   unsigned char c;
+  size_t clen;
+  int b;
+#if defined (HANDLE_MULTIBYTE)
+  wchar_t wc;
+#endif
 
   if (str == 0 || *str == 0)
     return ((char *)0);
@@ -219,10 +227,11 @@ ansic_quote (str, flags, rlen)
   *r++ = '$';
   *r++ = '\'';
 
-  for (s = str, l = 0; *s; s++)
+  for (s = str; c = *s; s++)
     {
-      c = *s;
-      l = 1;		/* 1 == add backslash; 0 == no backslash */
+      b = l = 1;		/* 1 == add backslash; 0 == no backslash */
+      clen = 1;
+
       switch (c)
 	{
 	case ESC: c = 'E'; break;
@@ -230,7 +239,7 @@ ansic_quote (str, flags, rlen)
 	case '\a': c = 'a'; break;
 	case '\v': c = 'v'; break;
 #else
-	case '\007': c = 'a'; break;
+	case 0x07: c = 'a'; break;
 	case 0x0b: c = 'v'; break;
 #endif
 
@@ -243,7 +252,13 @@ ansic_quote (str, flags, rlen)
 	case '\'':
 	  break;
 	default:
+#if defined (HANDLE_MULTIBYTE)
+	  b = is_basic (c);
+	  if ((b == 0 && ((clen = mbrtowc (&wc, s, MB_CUR_MAX, 0)) < 0 || MB_INVALIDCH (clen) || iswprint (wc) == 0)) ||
+	      (b == 1 && ISPRINT (c) == 0))
+#else
 	  if (ISPRINT (c) == 0)
+#endif
 	    {
 	      *r++ = '\\';
 	      *r++ = TOCHAR ((c >> 6) & 07);
@@ -254,9 +269,20 @@ ansic_quote (str, flags, rlen)
 	  l = 0;
 	  break;
 	}
+      if (b == 0 && clen == 0)
+	break;
+
       if (l)
 	*r++ = '\\';
-      *r++ = c;
+
+      if (clen == 1)
+	*r++ = c;
+      else
+	{
+	  for (b = 0; b < (int)clen; b++)
+	    *r++ = (unsigned char)s[b];
+	  s += clen - 1;	/* -1 because of the increment above */
+	}
     }
 
   *r++ = '\'';
@@ -265,6 +291,37 @@ ansic_quote (str, flags, rlen)
     *rlen = r - ret;
   return ret;
 }
+
+#if defined (HANDLE_MULTIBYTE)
+int
+ansic_wshouldquote (string)
+     const char *string;
+{
+  const wchar_t *wcs;
+  wchar_t wcc;
+
+  wchar_t *wcstr = NULL;
+  size_t slen;
+
+
+  slen = mbstowcs (wcstr, string, 0);
+
+  if (slen == -1)
+    slen = 0;
+  wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
+  mbstowcs (wcstr, string, slen + 1);
+
+  for (wcs = wcstr; wcc = *wcs; wcs++)
+    if (iswprint(wcc) == 0)
+      {
+	free (wcstr);
+	return 1;
+      }
+
+  free (wcstr);
+  return 0;	
+}
+#endif
 
 /* return 1 if we need to quote with $'...' because of non-printing chars. */
 int
@@ -278,8 +335,14 @@ ansic_shouldquote (string)
     return 0;
 
   for (s = string; c = *s; s++)
-    if (ISPRINT (c) == 0)
-      return 1;
+    {
+#if defined (HANDLE_MULTIBYTE)
+      if (is_basic (c) == 0)
+	return (ansic_wshouldquote (s));
+#endif
+      if (ISPRINT (c) == 0)
+	return 1;
+    }
 
   return 0;
 }
