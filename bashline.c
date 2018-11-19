@@ -117,6 +117,7 @@ static char *restore_tilde __P((char *, char *));
 
 static char *bash_filename_rewrite_hook __P((char *, int));
 static void bash_directory_expansion __P((char **));
+static int bash_filename_stat_hook __P((char **));
 static int bash_directory_completion_hook __P((char **));
 static int filename_completion_ignore __P((char **));
 static int bash_push_line __P((void));
@@ -1414,7 +1415,7 @@ bash_default_completion (text, start, end, qc, compflags)
      const char *text;
      int start, end, qc, compflags;
 {
-  char **matches;
+  char **matches, *t;
 
   matches = (char **)NULL;
 
@@ -1424,7 +1425,19 @@ bash_default_completion (text, start, end, qc, compflags)
       if (qc != '\'' && text[1] == '(') /* ) */
 	matches = rl_completion_matches (text, command_subst_completion_function);
       else
-	matches = rl_completion_matches (text, variable_completion_function);
+	{
+	  matches = rl_completion_matches (text, variable_completion_function);
+	  if (matches && matches[0] && matches[1] == 0)
+	    {
+	      t = savestring (matches[0]);
+	      bash_filename_stat_hook (&t);
+	      /* doesn't use test_for_directory because that performs tilde
+		 expansion */
+	      if (file_isdir (t))
+		rl_completion_append_character = '/';
+	      free (t);
+	    }
+	}
     }
 
   /* If the word starts in `~', and there is no slash in the word, then
@@ -2761,6 +2774,57 @@ restore_directory_hook (hookf)
     rl_directory_completion_hook = hookf;
   else
     rl_directory_rewrite_hook = hookf;
+}
+
+static int
+bash_filename_stat_hook (dirname)
+     char **dirname;
+{
+  char *local_dirname, *new_dirname, *t;
+  int should_expand_dirname, return_value;
+  WORD_LIST *wl;
+  struct stat sb;
+
+  local_dirname = *dirname;
+  should_expand_dirname = return_value = 0;
+  if (t = mbschr (local_dirname, '$'))
+    should_expand_dirname = '$';
+  else if (t = mbschr (local_dirname, '`'))	/* XXX */
+    should_expand_dirname = '`';
+
+#if defined (HAVE_LSTAT)
+  if (should_expand_dirname && lstat (local_dirname, &sb) == 0)
+#else
+  if (should_expand_dirname && stat (local_dirname, &sb) == 0)
+#endif
+    should_expand_dirname = 0;
+  
+  if (should_expand_dirname)  
+    {
+      new_dirname = savestring (local_dirname);
+      wl = expand_prompt_string (new_dirname, 0, W_NOCOMSUB|W_NOPROCSUB);    /* does the right thing */ 
+      if (wl)
+	{
+	  free (new_dirname);
+	  new_dirname = string_list (wl);
+	  /* Tell the completer we actually expanded something and change
+	     *dirname only if we expanded to something non-null -- stat
+	     behaves unpredictably when passed null or empty strings */
+	  if (new_dirname && *new_dirname)
+	    {
+          free (local_dirname); /* XXX */
+	      local_dirname = *dirname = new_dirname; 
+	      return_value = STREQ (local_dirname, *dirname) == 0;
+	    }
+      else
+	      free (new_dirname);
+	  dispose_words (wl);
+	}
+      else
+	free (new_dirname);
+    }	
+
+  return (return_value);
 }
 
 /* Handle symbolic link references and other directory name
